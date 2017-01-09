@@ -1,0 +1,19 @@
+{
+	"firstState": "Cell",
+	"states": [
+		{
+			"name": "Cell",
+			"commands": [
+				"S", "Sheets"
+			],
+			"text": "I was in my cell.\n\nS: look at the sheets."
+		},
+		{
+			"name": "Sheets",
+			"commands": [
+				"None", "Cell"
+			],
+			"text": "The sheets were dreadfully filthy. I decided to take my chances on the floor.\n\nAny key: return."
+		}
+	]
+}
