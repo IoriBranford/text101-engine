@@ -5,25 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class TextController : MonoBehaviour {
-
-	[Serializable]
-	public class GameData {
-		public string firstState;
-		public State.Data[] states;
-
-		// dataResource = Name of a resource file without extension
-		// The file must be in Resources folder
-		public static GameData Load (string dataResource) {
-			var gameDataAsset = Resources.Load(dataResource) as TextAsset;
-			if (gameDataAsset == null) {
-				print ("Missing GameData resource");
-				return null;
-			}
-
-			return JsonUtility.FromJson<GameData>(gameDataAsset.text);
-		}
-	}
-
 	private Dictionary<string, State> _states;
 	private State _state;
 

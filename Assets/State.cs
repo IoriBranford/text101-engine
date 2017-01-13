@@ -6,16 +6,16 @@ public class State {
 
 	[Serializable]
 	public class Data {
-		public string name;
-		public string text;
-		public string[] commands;
+		public string name = "Unnamed";
+		public string text = "Empty";
+		public List<string> commands = new List<string>();
 		// An Array because Dictionary is not serializable
 		// Every 2 elements is a key/nextState pair
 		// e.g. ["S", "Sheets", "M", "Mirror", "D", "Door"]
 	}
 
-	public string name { get; set; }
-	public string text { get; set; }
+	public string name { get; }
+	public string text { get; }
 	public Dictionary<KeyCode, string> commands { get; }
 
 	public State (Data data) {
@@ -23,7 +23,7 @@ public class State {
 		text = data.text;
 		commands = new Dictionary<KeyCode, string> ();
 
-		for (int i = 0; i < data.commands.Length; i += 2) {
+		for (int i = 0; i < data.commands.Count; i += 2) {
 			string keyName = data.commands [i];
 			string nextStateName = data.commands [i + 1];
 

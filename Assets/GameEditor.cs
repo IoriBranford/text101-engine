@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,77 +11,104 @@ public class GameEditor : EditorWindow {
 		EditorWindow.GetWindow(typeof(GameEditor));
 	}
 
-	private Dictionary<string, State> _states;
-	private Dictionary<string, bool> _statesOpen;
-	private Dictionary<string, string> _statesNewNames;
+	private GameData _gameData;
+	//private Dictionary<string, int> _statesIndex;
+	private List<bool> _statesOpen;
 	private string _firstState;
 
-	public void LoadData() {
-		var gameData = TextController.GameData.Load("GameData");
+	public void LoadData () {
+		_gameData = GameData.Load("GameData");
 
-		_firstState = gameData.firstState;
-		_states = new Dictionary<string, State> ();
-		_statesOpen = new Dictionary<string, bool> ();
-		_statesNewNames = new Dictionary<string, string> ();
+		_firstState = _gameData.firstState;
+		//_statesIndex = new Dictionary<string, int> ();
+		_statesOpen = new List<bool> (_gameData.states.Count);
 
-		foreach (State.Data stateData in gameData.states) {
-			try {
-				_states.Add (stateData.name, new State (stateData));
-				_statesOpen.Add (stateData.name, false);
-			} catch (Exception exception) {
-				MonoBehaviour.print (exception);
+		int i = 0;
+		foreach (State.Data stateData in _gameData.states) {
+			//_statesIndex.Add (stateData.name, i++);
+			_statesOpen.Add(false);
+		}
+	}
+
+	public void SaveData () {
+		string gameDataJson = JsonUtility.ToJson(_gameData);
+		StreamWriter streamWriter =
+			File.CreateText("Assets/Resources/GameData.json");
+		streamWriter.WriteLine(gameDataJson);
+		streamWriter.Close();
+	}
+
+	void OnGUI_State (State.Data stateData) {
+		stateData.name = EditorGUILayout.DelayedTextField("Name", stateData.name);
+		GUILayout.Label ("Text");
+		stateData.text = EditorGUILayout.TextArea(stateData.text, EditorStyles.textArea);
+
+		Rect rect = EditorGUILayout.BeginHorizontal();
+		GUILayout.Label("Key");
+		GUILayout.Label("Destination");
+		EditorGUILayout.EndHorizontal();
+		int deleted = -1;
+		for (int i = 0; i < stateData.commands.Count; i += 2) {
+			string keyCodeStr = stateData.commands [i];
+			string nextState = stateData.commands [i + 1];
+
+			EditorGUILayout.BeginHorizontal();
+			stateData.commands[i] = EditorGUILayout.DelayedTextField(keyCodeStr);
+			stateData.commands[i + 1] = EditorGUILayout.DelayedTextField(nextState);
+			if (GUILayout.Button("Del")) {
+				deleted = i;
 			}
+			EditorGUILayout.EndHorizontal();
+		}
+		if (deleted >= 0) {
+			stateData.commands.RemoveRange(deleted, 2);
+		}
+
+		if (GUILayout.Button("Add New Command")) {
+			stateData.commands.AddRange(new string[] {"", ""});
 		}
 	}
 
 	void OnGUI () {
-		if (_states == null)
+		if (_gameData == null)
 			LoadData();
 
 		titleContent.text = "Text101";
 
 		GUILayout.Label ("General", EditorStyles.boldLabel);
-		_firstState = EditorGUILayout.TextField("First State", _firstState);
+		_firstState = EditorGUILayout.DelayedTextField("First State", _firstState);
+
+		EditorGUILayout.Space();
+
 		GUILayout.Label ("States", EditorStyles.boldLabel);
-		foreach (var namestate in _states) {
-			string name = namestate.Key;
-			State state = namestate.Value;
-
-			_statesOpen[name] = EditorGUILayout.Foldout(_statesOpen[name], name, true);
-			if (!_statesOpen[name])
-				continue;
-
-			string newName = EditorGUILayout.DelayedTextField("Name", state.name);
-			GUILayout.Label ("Text");
-			state.text = EditorGUILayout.TextArea(state.text, EditorStyles.textArea);
-
-			Rect rect = EditorGUILayout.BeginHorizontal();
-			GUILayout.Label("Key");
-			GUILayout.Label("Destination");
+		int i = 0;
+		int deleted = -1;
+		foreach (var stateData in _gameData.states) {
+			EditorGUILayout.BeginHorizontal();
+			_statesOpen[i] = EditorGUILayout.Foldout(
+					_statesOpen[i], stateData.name,
+					true, EditorStyles.foldout);
+			if (GUILayout.Button("Del")) {
+				deleted = i;
+			}
 			EditorGUILayout.EndHorizontal();
-			foreach (var command in state.commands) {
-				rect = EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.TextField(command.Key.ToString());
-				EditorGUILayout.TextField(command.Value);
-				EditorGUILayout.EndHorizontal();
+
+			if (_statesOpen[i]) {
+				OnGUI_State(stateData);
+				EditorGUILayout.Space();
 			}
 
-			if (newName != state.name) {
-				_statesNewNames.Add(state.name, newName);
-			}
+			++i;
+		}
+		if (deleted >= 0) {
+			_gameData.states.RemoveAt(deleted);
 		}
 
-		foreach (var stateNewName in _statesNewNames) {
-			State state = _states[stateNewName.Key];
-			bool stateOpen = _statesOpen[stateNewName.Key];
-			string newName = stateNewName.Value;
-			_states.Remove(state.name);
-			_states.Add(newName, state);
-			_statesOpen.Remove(state.name);
-			_statesOpen.Add(newName, stateOpen);
-			state.name = newName;
+		if (GUILayout.Button("Add New State")) {
+			_gameData.states.Add(new State.Data());
+			_statesOpen.Add(true);
 		}
 
-		_statesNewNames.Clear();
+		SaveData();
 	}
 }
