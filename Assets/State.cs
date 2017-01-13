@@ -14,8 +14,8 @@ public class State {
 		// e.g. ["S", "Sheets", "M", "Mirror", "D", "Door"]
 	}
 
-	public string name { get; }
-	public string text { get; }
+	public string name { get; set; }
+	public string text { get; set; }
 	public Dictionary<KeyCode, string> commands { get; }
 
 	public State (Data data) {
