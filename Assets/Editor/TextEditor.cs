@@ -75,6 +75,8 @@ public class GameEditor : EditorWindow {
 
 		titleContent.text = "Text101";
 
+		bool saved = GUILayout.Button("Save");
+
 		GUILayout.Label ("General", EditorStyles.boldLabel);
 		_firstState = EditorGUILayout.DelayedTextField("First State", _firstState);
 
@@ -109,6 +111,11 @@ public class GameEditor : EditorWindow {
 			_statesOpen.Add(true);
 		}
 
+		if (saved)
+			SaveData();
+	}
+
+	void OnDestroy () {
 		SaveData();
 	}
 }
