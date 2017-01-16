@@ -104,6 +104,7 @@ public class GameEditor : EditorWindow {
 		}
 		if (deleted >= 0) {
 			_gameData.states.RemoveAt(deleted);
+			_statesOpen.RemoveAt(deleted);
 		}
 
 		if (GUILayout.Button("Add New State")) {
